@@ -1,0 +1,73 @@
+<mxfile host="app.diagrams.net" modified="2024-03-27T22:44:37.552Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0" etag="jpyWxTWMlLI3fU8lB9JO" version="24.2.0" type="github">
+  <diagram name="Page-1" id="bhckNFv6l1pSQgi_Kchz">
+    <mxGraphModel dx="2074" dy="1114" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="4PE1vC7Dv5YLUBlVBz_h-1" target="4PE1vC7Dv5YLUBlVBz_h-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-1" value="main menu" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="80" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="4PE1vC7Dv5YLUBlVBz_h-2" target="4PE1vC7Dv5YLUBlVBz_h-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="4PE1vC7Dv5YLUBlVBz_h-2" target="4PE1vC7Dv5YLUBlVBz_h-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="4PE1vC7Dv5YLUBlVBz_h-2" target="4PE1vC7Dv5YLUBlVBz_h-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-2" value="Login" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="190" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="4PE1vC7Dv5YLUBlVBz_h-3" target="4PE1vC7Dv5YLUBlVBz_h-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-3" value="Student" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="4PE1vC7Dv5YLUBlVBz_h-5" target="4PE1vC7Dv5YLUBlVBz_h-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-5" value="Professor" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="4PE1vC7Dv5YLUBlVBz_h-6" target="4PE1vC7Dv5YLUBlVBz_h-32">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-6" value="Admin" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="865" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-28" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="200" y="443" width="490" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-21" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="4PE1vC7Dv5YLUBlVBz_h-28">
+          <mxGeometry y="-3.85" width="490" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-14" value="Book appointment" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="4PE1vC7Dv5YLUBlVBz_h-28">
+          <mxGeometry x="27.222222222222218" y="23.07692307692308" width="108.88888888888887" height="46.15384615384616" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-15" value="View appointments" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="4PE1vC7Dv5YLUBlVBz_h-28">
+          <mxGeometry x="181.48148148148147" y="23.07692307692308" width="108.88888888888887" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-16" value="confirm appointment" style="whiteSpace=wrap;html=1;" vertex="1" parent="4PE1vC7Dv5YLUBlVBz_h-28">
+          <mxGeometry x="335.74074074074076" y="23.07692307692308" width="108.88888888888887" height="46.15384615384616" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-33" value="" style="group" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="750" y="440" width="350" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-32" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="4PE1vC7Dv5YLUBlVBz_h-33">
+          <mxGeometry width="350" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-29" value="Create/delete account" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="4PE1vC7Dv5YLUBlVBz_h-33">
+          <mxGeometry x="185" y="20" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4PE1vC7Dv5YLUBlVBz_h-30" value="Create/delete appointment" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="4PE1vC7Dv5YLUBlVBz_h-33">
+          <mxGeometry x="35" y="20" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
