@@ -1,0 +1,37 @@
+# Application Name 
+
+CSCI 370 Assignment 7
+
+
+## Technologies
+
+C/C++
+Make
+occi
+oracle
+
+
+## Build, Run, Test, Installation, and Uninstallation
+
+1. to build and run the application:
+    - "make clean"
+    - "make"
+    - "make run"
+
+
+## Usage
+
+1. USERNAME>> <Your username here>
+2. PASSWORD>> <Your password here>
+3. COMMAND>> subscribe <username> <topic> 
+4. COMMAND>> unsubscribe <username> <topic>
+
+
+## Notes
+
+Assn7.sql file contains the table definitions and queries used to populate the table for testing
+
+
+## Contributors
+
+- John Lamprecht
