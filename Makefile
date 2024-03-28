@@ -16,7 +16,7 @@ SRCS = ui.cpp main.cpp db.cpp
 OBJS = $(addprefix build/, $(SRCS:.cpp=.o))
 
 # Target executable
-TARGET = Assn7
+TARGET = Project
 
 all: $(TARGET)
 

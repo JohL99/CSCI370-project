@@ -12,6 +12,16 @@
 #define SUBSCRIBE "subscribe"
 #define UNSUBSCRIBE "unsubscribe"
 
+enum userTypes {ADMIN, PROFESSOR, STUDENT};
+
+struct user {
+    std::string IdNum;
+    std::string name;
+    std::string email;
+    bool isLoggedIn;
+    userTypes type;
+}; 
+
 
 void getUserCommand(std::string& userCommand);
 // Displays a command line prompt as follows:

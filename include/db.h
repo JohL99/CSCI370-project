@@ -10,7 +10,7 @@ void dbConnect(std::string userName, std::string password, std::string connectSt
 
 void dbDisconnect(oracle::occi::Environment*& env, oracle::occi::Connection*& conn);
 
-void dbQuerySubscribe(std::string username, std::string topic, oracle::occi::Connection*& conn, std::string& response);
+/* void dbQuerySubscribe(std::string username, std::string topic, oracle::occi::Connection*& conn, std::string& response);
 
 void dbQueryUnsubscribe(std::string username, std::string topic, oracle::occi::Connection*& conn, std::string& response);
 
@@ -19,7 +19,7 @@ void selectAllFromUsers(oracle::occi::Connection*& conn);
 
 void selectAllFromActiveSubscriptions(oracle::occi::Connection*& conn);
 
-void selectAllFromSubscribeHistory(oracle::occi::Connection*& conn);
+void selectAllFromSubscribeHistory(oracle::occi::Connection*& conn); */
 
 
 #endif

@@ -61,7 +61,7 @@ void dbDisconnect(Environment*& env, Connection*& conn) {
  * @param conn A pointer to the database connection.
  * @param response A reference to a string to store the response message.
  */
-void dbQuerySubscribe(string username, string topic, Connection*& conn, string& response) {
+/* void dbQuerySubscribe(string username, string topic, Connection*& conn, string& response) {
     try {
 
         // Trim leading and trailing whitespace from username
@@ -148,7 +148,7 @@ void dbQuerySubscribe(string username, string topic, Connection*& conn, string& 
     } catch (SQLException& ex) {
         response = "Database error: " + string(ex.what());
     }
-}
+} */
 
 
 /**
