@@ -1,5 +1,8 @@
-#include "include/ui.h"
-#include "include/db.h"
+#include "ui.h"
+#include "db.h"
+#include "screenStack.h"
+
+#include <iostream>
 
 
 // connection string
@@ -7,6 +10,9 @@
 
 
 int main () {
+
+    user user;
+    screenIDs screenIDs;
 
     // quit flag
     bool quit = false;
@@ -19,16 +25,41 @@ int main () {
     std::string userName;
     std::string password;
 
-    // get user credentials
-    userName = getUserName();
-    password = readPassword();
+    // get database credentials
+    std::string dbUserName = getUserName(1);
+    std::string dbPassword = readPassword(1);
 
-    dbConnect(userName, password, CONNECTSTRING, env, conn);
+    // initialise the screen stack
+    ScreenStack screenStack;
+    screenStack.push(screenIDs.stackBottom);
+
+    /* user.isLoggedIn = false;
+    user.IdNum = "123456789";
+    user.name = "John Doe"; */
+
     
+
+    // stub testing
+    /* user.isLoggedIn = true;
+    user.IdNum = userName; */
+
+
+    dbConnect(dbUserName, dbPassword, CONNECTSTRING, env, conn);
+
+    if (env == NULL || conn == NULL) {
+        return 1;
+    }
+
+    // show login screen
+    showLoginScreen(user, conn);
+
+    showWelcomeScreen(user, conn);
+    screenStack.push(screenIDs.welcomeID);
+
     // get user command and interpret it
     while (!quit) {
         getUserCommand(userCommand);
-        interpretAndHandleUserCommand(userCommand, quit, conn);
+        interpretAndHandleUserCommand(userCommand, quit, user, screenStack, screenIDs, conn);
     }
 
     if (quit) {

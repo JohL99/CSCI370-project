@@ -4,24 +4,23 @@
 #include <string>
 #include <occi.h>
 
+#include "screenStack.h"
+#include "db.h"
+#include "user.h"
+
 #define PROMPT "COMMAND>>"
-#define PLOGIN "USERNAME>>"
-#define PPASSWORD "PASSWORD>>"
 
-#define QUIT "quit"
-#define SUBSCRIBE "subscribe"
-#define UNSUBSCRIBE "unsubscribe"
+#define menuDelimiter "---------------------------------------------------------------------"
 
-enum userTypes {ADMIN, PROFESSOR, STUDENT};
 
-struct user {
-    std::string IdNum;
-    std::string name;
-    std::string email;
-    bool isLoggedIn;
-    userTypes type;
-}; 
 
+void showWelcomeScreen(user &user, oracle::occi::Connection*& conn);
+void showLoginScreen(user &user, oracle::occi::Connection*& conn);
+void showAppointmentsScreen(user &user, oracle::occi::Connection*& conn);
+void showBookingScreen(user &user, oracle::occi::Connection*& conn);
+void showHelpScreen();
+void confirmAppointmentScreen(const std::string aptID, user& user, oracle::occi::Connection*& conn);
+void cancelAppointmentScreen(user &user, oracle::occi::Connection*& conn, const std::string aptID);
 
 void getUserCommand(std::string& userCommand);
 // Displays a command line prompt as follows:
@@ -29,13 +28,15 @@ void getUserCommand(std::string& userCommand);
 // Lets user to type command and reads the user command from the prompt.
 
 
-void showResponse(std::string response); 
+/* response getResponseObject(std::string response);  */
 // Displays the response to the user command.
 
-void interpretAndHandleUserCommand(std::string command, bool& quitFlag, oracle::occi::Connection*& conn);
+void interpretAndHandleUserCommand(std::string command, bool& quitFlag, user& user, ScreenStack& screenstack, screenIDs screenIDs, oracle::occi::Connection*& conn);
 
-std::string readPassword();
+std::string readPassword(int dbFlag);
 
-std::string getUserName();
+std::string getUserName(int dbFlag);
+
+void handleBackCommand(user& user, ScreenStack& screenstack, screenIDs screenIDs, oracle::occi::Connection*& conn);
 
 #endif

@@ -4,22 +4,54 @@
 #include <string>
 #include <occi.h>
 
+#include "ui.h"
+#include "user.h"
 
+#define RESPONSE_ERROR "Error: Could not complete the request %s."
+#define CONNECTSTRING "database.csci.viu.ca"
 
-void dbConnect(std::string userName, std::string password, std::string connectString, oracle::occi::Environment*& env, oracle::occi::Connection*& conn);
+using namespace std;
+using namespace oracle::occi;
 
-void dbDisconnect(oracle::occi::Environment*& env, oracle::occi::Connection*& conn);
+class response {
+    public:
+        std::string response;
+        bool success;
+};
 
-/* void dbQuerySubscribe(std::string username, std::string topic, oracle::occi::Connection*& conn, std::string& response);
+class appointment {
+    public:
+        std::string AptID;
+        std::string UserID; // ID of the person booking
+        std::string F_UserName; // name of the person being booked
+        std::string Time;
+        std::string Date;
+        std::string Status;
+};
 
-void dbQueryUnsubscribe(std::string username, std::string topic, oracle::occi::Connection*& conn, std::string& response);
+void dbConnect(string userName, string password, string connectString, Environment*& env, Connection*& conn);
 
+void dbDisconnect(Environment*& env, Connection*& conn);
 
-void selectAllFromUsers(oracle::occi::Connection*& conn);
+bool dbQueryLogin(string username, string password, Connection*& conn, user &usr);
 
-void selectAllFromActiveSubscriptions(oracle::occi::Connection*& conn);
+response sendResponse();
 
-void selectAllFromSubscribeHistory(oracle::occi::Connection*& conn); */
+bool doesProfessorExist(Connection*& conn, const string& name);
+
+bool isValidTime(const string& timeSlot);
+
+bool isValidDate(const std::string& dateStr);
+
+void createAppointment(Connection*& conn, const appointment& apt);
+
+void scheduleAppointment(Connection*& conn, const user& usr);
+
+void confirmAppointment(Connection*& conn, const string aptID, const user& usr);
+
+void cancelAppointment(Connection*& conn, const user& usr, const string aptID);
+
+string getAppointments(Connection*& conn, const user& usr);
 
 
 #endif
