@@ -23,13 +23,6 @@ void confirmAppointmentScreen(const std::string aptID, user& user, oracle::occi:
 void cancelAppointmentScreen(user &user, oracle::occi::Connection*& conn, const std::string aptID);
 
 void getUserCommand(std::string& userCommand);
-// Displays a command line prompt as follows:
-//      COMMAND>>
-// Lets user to type command and reads the user command from the prompt.
-
-
-/* response getResponseObject(std::string response);  */
-// Displays the response to the user command.
 
 void interpretAndHandleUserCommand(std::string command, bool& quitFlag, user& user, ScreenStack& screenstack, screenIDs screenIDs, oracle::occi::Connection*& conn);
 

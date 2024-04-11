@@ -16,9 +16,4 @@ struct user {
     user() : isLoggedIn(false) {} // Initialize isLoggedIn in the constructor
 }; 
 
-// Function to check if the user is a student or professor
-/* userTypes getUserType(const user& usr) {
-    return usr.type;
-} */
-
 #endif

@@ -26,21 +26,11 @@ using namespace oracle::occi;
  */
 void getUserCommand(string& userCommand) {
     cout << PROMPT;
-    getline(cin, userCommand);
+    if (!getline(cin, userCommand) || userCommand.empty()) {
+        userCommand = ""; // Reset to empty string if input is blank
+    }
 }
 
-
-/**
- * @brief Displays the given response on the console.
- * 
- * @param response The response to be displayed.
- */
-response getResponseObject(string res) {
-    response resp;
-    resp.response = res;
-    resp.success = true;
-    return resp;
-}
 
 
 /**
@@ -105,8 +95,6 @@ void interpretAndHandleUserCommand(string command, bool& quitFlag, user &user, S
             case 1:
                 // Handle help command
                 showHelpScreen();
-                // Dont push the screen onto the stack
-                //screenstack.push(screenIDs.helpID);
                 break;
 
             case 2:
@@ -123,8 +111,6 @@ void interpretAndHandleUserCommand(string command, bool& quitFlag, user &user, S
             case 4:
                 // Handle book command
                 showBookingScreen(user, conn);
-                // Dont push the screen onto the stack
-                //screenstack.push(screenIDs.bookAptID);
                 break;
 
             case 5:
@@ -150,7 +136,6 @@ void interpretAndHandleUserCommand(string command, bool& quitFlag, user &user, S
             default:
                 // The command doesn't exist in the map
                 showHelpScreen();
-                //screenstack.push(screenIDs.helpID);
                 break;
 
         }
@@ -230,8 +215,8 @@ void showWelcomeScreen(user &user, Connection*& conn) {
 
 
 void showLoginScreen(user &user, Connection*& conn) {
-    string username;
-    string password;
+    string username = "";
+    string password = "";
 
     username = getUserName(0);
     password = readPassword(0);
@@ -244,14 +229,9 @@ void showLoginScreen(user &user, Connection*& conn) {
 
     cout << "Logging in..." << endl << endl;
 
-    //user.isLoggedIn = dbQueryLogin(username, password, conn, user);
-
-    // stub testing
-    user.isLoggedIn = true;
-    user.IdNum = username;
-
-    // get user name from db
-    user.name = "John Doe";
+    if (!dbQueryLogin(username, password, conn, user)) {
+        return;
+    }
     
 }
 
@@ -260,9 +240,10 @@ void showAppointmentsScreen(user &user, Connection*& conn) {
 
     string response = "";
 
-    //response = getAppointments(conn, user);
+    response = getAppointments(conn, user);
+    // stub testing
+    //response = "test data";
 
-    response = "test data";
     cout << menuDelimiter << endl << endl;
 
     cout << "Current appointments:" << endl;

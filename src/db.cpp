@@ -7,6 +7,9 @@
 #include <iostream>
 #include <ctime>
 #include <sstream>
+#include <fstream>
+#include <cstring>
+#include <vector>
 
 using namespace std;
 using namespace oracle::occi;
@@ -55,10 +58,12 @@ void dbDisconnect(Environment*& env, Connection*& conn) {
 
 }
 
+
 bool dbQueryLogin(string username, string password, Connection*& conn, user &usr) {
+
     try {
         Statement* stmt = conn->createStatement();
-        stmt->setSQL("SELECT * FROM Students WHERE TRIM(StudentID) = :1 AND TRIM(Password) = :2");
+        stmt->setSQL("SELECT * FROM Users370 WHERE TRIM(userID) = :1 AND TRIM(Password) = :2");
         stmt->setString(1, username);
         stmt->setString(2, password);
         ResultSet* rs = stmt->executeQuery();
@@ -68,35 +73,14 @@ bool dbQueryLogin(string username, string password, Connection*& conn, user &usr
             usr.IdNum = rs->getString(1);
             usr.name = rs->getString(2) + " " + rs->getString(3); // Combine first name and last name
             usr.email = rs->getString(4); // Get email from the result set
-            usr.type = STUDENT;
+            usr.type = rs->getString(6) == "STUDENT" ? STUDENT : PROFESSOR; // Determine user type based on UserType column
             delete rs;
             delete stmt;
             return true;
         } else {
             delete rs;
             delete stmt;
-
-            // If not found in Students table, check Professors table
-            stmt = conn->createStatement();
-            stmt->setSQL("SELECT * FROM Professors WHERE TRIM(professorID) = :1 AND TRIM(Password) = :2");
-            stmt->setString(1, username);
-            stmt->setString(2, password);
-            rs = stmt->executeQuery();
-
-            if (rs->next()) {
-                usr.isLoggedIn = true;
-                usr.IdNum = rs->getString(1);
-                usr.name = rs->getString(2) + " " + rs->getString(3); // Combine first name and last name
-                usr.email = rs->getString(4); // Get email from the result set
-                usr.type = PROFESSOR;
-                delete rs;
-                delete stmt;
-                return true;
-            } else {
-                delete rs;
-                delete stmt;
-                return false; // Neither student nor professor found
-            }
+            return false; // User not found
         }
 
     } catch (SQLException& ex) {
@@ -106,13 +90,30 @@ bool dbQueryLogin(string username, string password, Connection*& conn, user &usr
 }
 
 
+string getUserName(Connection*& conn, const string& userID) {
+    try {
+        Statement* stmt = conn->createStatement();
+        string sqlQuery = "SELECT FirstName, LastName FROM Users370 WHERE userID = :1";
+        stmt->setSQL(sqlQuery);
+        stmt->setString(1, userID);
+        ResultSet* rs = stmt->executeQuery();
 
-response sendResponse() {
-    response r;
-    r.response = "Success";
-    r.success = true;
-    return r;
+        string userName = "";
+
+        if (rs->next()) {
+            userName = rs->getString(1) + " " + rs->getString(2);
+        }
+
+        delete rs;
+        delete stmt;
+
+        return userName;
+    } catch (SQLException& ex) {
+        cerr << "Database error: " << ex.what() << endl;
+        return "Unknown"; // Return "Unknown" on error
+    }
 }
+
 
 bool doesProfessorExist(Connection*& conn, const string& name) {
 /*     try {
@@ -313,11 +314,10 @@ void cancelAppointment(Connection*& conn, const user& usr, const string aptID) {
  */
 }
 
-
 string getAppointments(Connection*& conn, const user& usr) {
-/*     try {
+    try {
         Statement* stmt = conn->createStatement();
-        string sqlQuery = "SELECT * FROM Appointment WHERE bookerID = :1";
+        string sqlQuery = "SELECT * FROM Appointment370 WHERE bookerID = :1 OR bookeeID = :1";
         stmt->setSQL(sqlQuery);
         stmt->setString(1, usr.IdNum);
         ResultSet* rs = stmt->executeQuery();
@@ -325,10 +325,30 @@ string getAppointments(Connection*& conn, const user& usr) {
         string result = "";
 
         while (rs->next()) {
-            result += "Appointment ID: " + to_string(rs->getInt(1)) + "\t";
-            result += "With: " + rs->getString(3) + "\t";
-            result += "Date: " + rs->getString(4) + "\t";
-            result += "Time: " + rs->getString(5) + "\t";
+            std::ostringstream oss;
+            oss << rs->getInt(1); // Convert int to string
+            result += "Appointment ID: " + oss.str() + "\t";
+
+            // Get the details of the booker
+            string bookerID = rs->getString(2);
+
+            if (bookerID == usr.IdNum) {
+                // Get the details of the bookee
+                string bookeeID = rs->getString(3);
+                string bookeeName = getUserName(conn, bookeeID);
+                result += "With: " + bookeeName + "\t";
+            } else {
+                string bookerName = getUserName(conn, bookerID);
+                result += "With: " + bookerName + "\t";
+            }
+
+            /* // Get the details of the bookee
+            string bookeeID = rs->getString(3);
+            string bookeeName = getUserName(conn, bookeeID);
+            result += "With: " + bookeeName + "\t"; */
+
+            result += "Time: " + rs->getString(4) + "\t";
+            result += "Date: " + rs->getString(5) + "\t";
             result += "Status: " + rs->getString(6) + "\t";
             result += "length: " + rs->getString(7) + "\n";
 
@@ -343,254 +363,240 @@ string getAppointments(Connection*& conn, const user& usr) {
     } catch (SQLException& ex) {
         cerr << "Database error: " << ex.what() << endl;
         return "ERR"; // Return empty string on error
-    } */
+    }
 }
 
 
-/* bool confirmAppointment(appointment apt) {
-    return true;
-
-} */
-
-/**
- * @brief Subscribes a user to a channel in the database.
- *
- * @param username The username of the user to subscribe.
- * @param topic The name of the channel to subscribe to.
- * @param conn A pointer to the database connection.
- * @param response A reference to a string to store the response message.
- */
-/* void dbQuerySubscribe(string username, string topic, Connection*& conn, string& response) {
+void dropDatabaseObjects(Connection*& conn) {
     try {
+        Statement* stmt = conn->createStatement();
 
-        // Trim leading and trailing whitespace from username
-        username.erase(0, username.find_first_not_of(' ')); // leading
-        username.erase(username.find_last_not_of(' ') + 1); // trailing
-
+        // Drop trigger
         try {
-            topic.erase(0, topic.find_first_not_of(' ')); // leading
-            topic.erase(topic.find_last_not_of(' ') + 1); // trailing
-        } catch(exception e) {
-            // do nothing
+            stmt->setSQL("DROP TRIGGER appointment_id_trigger");
+            stmt->executeUpdate();
+            cout << "Appointment ID trigger dropped successfully." << endl;
+        } catch (SQLException& ex) {
+            // Do nothing if the trigger does not exist
         }
 
-
-        // Create a Statement object
-        Statement* stmt = conn->createStatement();
-
-        // Check if the user is active
-        stmt->setSQL("SELECT status FROM Users WHERE TRIM(username) = :1");
-        stmt->setString(1, username);
-        ResultSet* rs = stmt->executeQuery();
-
-        if (!rs->next()) {
-            response = username + " does not exist.";
-            stmt->closeResultSet(rs);
-            conn->terminateStatement(stmt);
-            return;
-        } else if (rs->getString(1) != "active") {
-            cout << rs->getString(1) << endl;
-            response = username + " is not an active user.";
-            stmt->closeResultSet(rs);
-            conn->terminateStatement(stmt);
-            return;
-        }
-
-        stmt->closeResultSet(rs);
-
-        // Check if the channel exists
-        stmt->setSQL("SELECT * FROM Channels WHERE channelName = :1");
-        stmt->setString(1, topic);
-        rs = stmt->executeQuery();
-
-        if (!rs->next()) {
-            response = "Channel '" + topic + "' does not exist.";
-            stmt->closeResultSet(rs);
-            conn->terminateStatement(stmt);
-            return;
-        }
-
-        stmt->closeResultSet(rs);
-
-        // Check if the user is already subscribed to the channel
-        stmt->setSQL("SELECT * FROM ActiveSubscriptions WHERE username = :1 AND channel = :2");
-        stmt->setString(1, username);
-        stmt->setString(2, topic);
-        rs = stmt->executeQuery();
-
-        if (rs->next()) {
-            response = username + " is already subscribed to " + topic + ".";
-            stmt->closeResultSet(rs);
-            conn->terminateStatement(stmt);
-            return;
-        }
-
-        stmt->closeResultSet(rs);
-
-        // Subscribe the user to the channel
-        time_t t = time(0);
-        tm* now = localtime(&t);
-        ostringstream oss;
-        oss << (now->tm_year + 1900) << "-" << (now->tm_mon + 1) << "-" << now->tm_mday;
-        string subscribeTime = oss.str();
-        stmt->setSQL("INSERT INTO ActiveSubscriptions (username, channel, subscribeTime) VALUES (:1, :2, TO_DATE(:3, 'YYYY-MM-DD'))");
-        stmt->setString(1, username);
-        stmt->setString(2, topic);
-        stmt->setString(3, subscribeTime);
-        stmt->executeUpdate();
-
-        response = username + " successfully subscribed to " + topic + ".";
-
-        // Clean up
-        conn->terminateStatement(stmt);
-
-    } catch (SQLException& ex) {
-        response = "Database error: " + string(ex.what());
-    }
-} */
-
-
-/**
- * @brief Unsubscribes a user from a topic in the database.
- *
- * @param username The username of the user to unsubscribe.
- * @param topic The topic to unsubscribe from.
- * @param conn A pointer to the database connection.
- * @param response A reference to a string to store the response message.
- */
-/* void dbQueryUnsubscribe(string username, string topic, Connection*& conn, string& response) {
-    try {
-
-        // Trim leading and trailing whitespace from username
-        username.erase(0, username.find_first_not_of(' ')); // leading
-        username.erase(username.find_last_not_of(' ') + 1); // trailing
-
+        // Drop sequence
         try {
-            topic.erase(0, topic.find_first_not_of(' ')); // leading
-            topic.erase(topic.find_last_not_of(' ') + 1); // trailing
-        } catch(exception e) {
-            // do nothing 
+            stmt->setSQL("DROP SEQUENCE appointment_id_seq");
+            stmt->executeUpdate();
+            cout << "Appointment sequence dropped successfully." << endl;
+        } catch (SQLException& ex) {
+            // Do nothing if the sequence does not exist
         }
 
-        // Create a Statement object
-        Statement* stmt = conn->createStatement();
+        // Drop tables
+        try {
+            stmt->setSQL("DROP TABLE Appointment370");
+            stmt->executeUpdate();
+            cout << "Appointment table dropped successfully." << endl;
 
-        // Check if the user is subscribed to the channel
-        stmt->setSQL("SELECT * FROM ActiveSubscriptions WHERE TRIM(username) = :1 AND TRIM(channel) = :2");
-        stmt->setString(1, username);
-        stmt->setString(2, topic);
-        ResultSet* rs = stmt->executeQuery();
+            stmt->setSQL("DROP TABLE Users370");
+            stmt->executeUpdate();
+            cout << "Users table dropped successfully." << endl;
 
-        if (!rs->next()) {
-            response = username + " is not subscribed to " + topic + ".";
-            stmt->closeResultSet(rs);
-            conn->terminateStatement(stmt);
-            return;
+            conn->commit(); // Commit changes
+        } catch (SQLException& ex) {
+            // Do nothing if the tables do not exist
         }
 
-        stmt->closeResultSet(rs);
-
-        // Get the current date/time
-        time_t t = time(0);
-        tm* now = localtime(&t);
-        std::ostringstream oss;
-        oss << (now->tm_year + 1900) << "-" << (now->tm_mon + 1) << "-" << now->tm_mday;
-        string unsubscribeTime = oss.str();
-
-        // Copy the subscription to the SubscribeHistory table
-        stmt->setSQL("INSERT INTO SubscribeHistory (username, channel, subscribeTime, unsubscribeTime) SELECT username, channel, subscribeTime, TO_DATE(:1, 'YYYY-MM-DD') FROM ActiveSubscriptions WHERE TRIM(username) = :2 AND TRIM(channel) = :3");
-        stmt->setString(1, unsubscribeTime);
-        stmt->setString(2, username);
-        stmt->setString(3, topic);
-        stmt->executeUpdate();
-
-        // Delete the subscription from the ActiveSubscriptions table
-        stmt->setSQL("DELETE FROM ActiveSubscriptions WHERE TRIM(username) = :1 AND TRIM(channel) = :2");
-        stmt->setString(1, username);
-        stmt->setString(2, topic);
-        stmt->executeUpdate();
-
-        response = username + " successfully unsubscribed from " + topic + ".";
-
-        // Clean up
-        conn->terminateStatement(stmt);
-
+        delete stmt;
     } catch (SQLException& ex) {
-        response = "Database error: " + string(ex.what());
-    }
-} */
-
-// =============================================================================================================================================================================================
-// used for debugging
-
-/* void selectAllFromUsers(Connection*& conn) {
-    try {
-        // Create a Statement object
-        Statement* stmt = conn->createStatement();
-
-        // Execute the query
-        stmt->setSQL("SELECT * FROM Users where username = 'John'");
-        ResultSet* rs = stmt->executeQuery();
-
-        // Print the results
-        while (rs->next()) {
-            std::cout << "Username: " << rs->getString(1) << ", Status: " << rs->getString(5) << std::endl;
-        }
-
-        // Clean up
-        stmt->closeResultSet(rs);
-        conn->terminateStatement(stmt);
-
-    } catch (SQLException& ex) {
-        std::cout << "Database error: " << ex.what() << std::endl;
+        cerr << "Database error: " << ex.what() << endl;
     }
 }
 
-void selectAllFromActiveSubscriptions(Connection*& conn) {
+
+void createDatabaseTables(Connection*& conn) {
     try {
-        // Create a Statement object
         Statement* stmt = conn->createStatement();
 
-        // Execute the query
-        stmt->setSQL("SELECT * FROM ActiveSubscriptions");
-        ResultSet* rs = stmt->executeQuery();
+        // Drop existing tables if they exist
+        dropDatabaseObjects(conn);
+        
 
-        // Print the results
-        while (rs->next()) {
-            std::cout << "Username: " << rs->getString(1) << ", Channel Name: " << rs->getString(2) << ", Subscribe Time: " << rs->getString(3) << std::endl;
-        }
+        // Create Users table
+        stmt->setSQL("CREATE TABLE Users370( \
+                userID CHAR(9) PRIMARY KEY, \
+                FirstName VARCHAR(65), \
+                LastName VARCHAR(65), \
+                Email VARCHAR(75), \
+                Password VARCHAR(60), \
+                UserType VARCHAR(20) DEFAULT 'STUDENT' \
+                )");
 
-        // Clean up
-        stmt->closeResultSet(rs);
-        conn->terminateStatement(stmt);
+        stmt->executeUpdate();
+        cout << "Users table created successfully." << endl;
 
+        // Create Appointment table
+        stmt->setSQL("CREATE TABLE Appointment370 ( \
+                    AppointmentID NUMBER PRIMARY KEY, \
+                    bookerID CHAR(9), \
+                    bookeeID CHAR(9), \
+                    TimeSlot TIMESTAMP, \
+                    AppointmentDate DATE, \
+                    Status VARCHAR2(10), \
+                    Length CHAR(2), \
+                    CONSTRAINT fk_booker FOREIGN KEY (bookerID) REFERENCES Users370(userID), \
+                    CONSTRAINT fk_bookee FOREIGN KEY (bookeeID) REFERENCES Users370(userID) \
+                )");
+
+        stmt->executeUpdate();
+
+        // Create sequence for AppointmentID
+        stmt->setSQL("CREATE SEQUENCE appointment_id_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE");
+        stmt->executeUpdate();
+        //cout << "Appointment sequence created successfully." << endl;
+
+        // Create trigger to auto-increment AppointmentID
+        stmt->setSQL("CREATE OR REPLACE TRIGGER appointment_id_trigger \
+                      BEFORE INSERT ON Appointment370 \
+                      FOR EACH ROW \
+                      BEGIN \
+                        SELECT appointment_id_seq.nextval INTO :new.AppointmentID FROM dual; \
+                      END;");
+        stmt->executeUpdate();
+        //cout << "Appointment ID trigger created successfully." << endl;
+
+        cout << "Appointment table created successfully." << endl;
+
+        conn->commit(); // Commit changes
+
+        delete stmt;
     } catch (SQLException& ex) {
-        std::cout << "Database error: " << ex.what() << std::endl;
+        cerr << "Database error: " << ex.what() << endl;
     }
 }
 
-void selectAllFromSubscribeHistory(Connection*& conn) {
+
+
+void insertDataFromCSV(Connection*& conn) {
+    // Insert data from Appointment.csv
+    ifstream appointmentFile(APPOINTMENT_CSV);
+    if (!appointmentFile.is_open()) {
+        cout << "Error: Unable to open " << APPOINTMENT_CSV << endl;
+        return;
+    }
+
+    string line;
+    while (getline(appointmentFile, line)) {
+        stringstream ss(line);
+        string aptID, bookerID, bookeeID, timeSlot, status, length;
+
+        getline(ss, aptID, ',');
+        getline(ss, bookerID, ',');
+        getline(ss, bookeeID, ',');
+        getline(ss, timeSlot, ',');
+        getline(ss, status, ',');
+        getline(ss, length, ',');
+
+        Statement* stmt = conn->createStatement();
+        stmt->setSQL("INSERT INTO Appointment370 (bookerID, bookeeID, TimeSlot, Status, Length) VALUES (:1, :2, TO_TIMESTAMP(:3, 'HH24:MI'), :4, :5)");
+        stmt->setString(1, bookerID);
+        stmt->setString(2, bookeeID);
+        stmt->setString(3, timeSlot);
+        stmt->setString(4, status);
+        stmt->setString(5, length);
+        stmt->executeUpdate();
+        delete stmt;
+    }
+
+    appointmentFile.close();
+
+    // Insert data from Users.csv
+    ifstream usersFile(USERS_CSV);
+    if (!usersFile.is_open()) {
+        cout << "Error: Unable to open " << USERS_CSV << endl;
+        return;
+    }
+
+    while (getline(usersFile, line)) {
+        stringstream ss(line);
+        string userID, firstName, lastName, email, password, userType;
+
+        getline(ss, userID, ',');
+        getline(ss, firstName, ',');
+        getline(ss, lastName, ',');
+        getline(ss, email, ',');
+        getline(ss, password, ',');
+        getline(ss, userType, ',');
+
+        Statement* stmt = conn->createStatement();
+        stmt->setSQL("INSERT INTO Users370 (userID, FirstName, LastName, Email, Password, UserType) VALUES (:1, :2, :3, :4, :5, :6)");
+        stmt->setString(1, userID);
+        stmt->setString(2, firstName);
+        stmt->setString(3, lastName);
+        stmt->setString(4, email);
+        stmt->setString(5, password);
+        stmt->setString(6, userType);
+        stmt->executeUpdate();
+        delete stmt;
+    }
+
+    usersFile.close();
+
+    // Commit the changes
+    conn->commit();
+
+    cout << "Data inserted successfully from CSV files." << endl;
+}
+
+void insertDummyUsers(Connection*& conn) {
     try {
-        // Create a Statement object
         Statement* stmt = conn->createStatement();
 
-        // Execute the query
-        stmt->setSQL("SELECT * FROM SubscribeHistory");
-        ResultSet* rs = stmt->executeQuery();
+        // Insert first dummy user
+        stmt->setSQL("INSERT INTO Users370 (userID, FirstName, LastName, Email, Password, UserType) VALUES ('123456789', 'John', 'Doe', 'john.doe@viu.ca', 'password123', 'STUDENT')");
+        stmt->executeUpdate();
+        cout << "First dummy user inserted successfully." << endl;
 
-        // Print the results
-        while (rs->next()) {
-            std::cout << "Username: " << rs->getString(1) << ", Channel: " << rs->getString(2) 
-                      << ", Subscribe Time: " << rs->getString(3) << ", Unsubscribe Time: " << rs->getString(4) << std::endl;
+        // Insert second dummy user
+        stmt->setSQL("INSERT INTO Users370 (userID, FirstName, LastName, Email, Password, UserType) VALUES ('987654321', 'Jane', 'Smith', 'jane.smith@viu.ca', 'password456', 'PROFESSOR')");
+        stmt->executeUpdate();
+        cout << "Second dummy user inserted successfully." << endl;
+
+        conn->commit(); // Commit changes
+
+        delete stmt;
+    } catch (SQLException& ex) {
+        cerr << "Database error: " << ex.what() << endl;
+    }
+}
+
+
+void insertDummyAppointments(Connection*& conn) {
+    try {
+        // Dummy data for appointments
+        std::string bookee[] = {"123456789", "123456789", "987654321"};
+        std::string booker[] = {"987654321", "987654321", "123456789"};
+        std::string timeSlot[] = {"12:00", "14:30", "16:45"};
+        std::string date[] = {"2024-02-15", "2024-05-22", "2024-03-10"};
+        std::string status[] = {"Confirmed", "Pending", "Confirmed"};
+        std::string length[] = {"15", "30", "45"};
+
+        // Insert dummy appointments
+        for (int i = 0; i < 3; i++) {   
+            Statement* stmt = conn->createStatement();
+            stmt->setSQL("INSERT INTO Appointment370 (bookerID, bookeeID, TimeSlot, AppointmentDate, Status, Length) VALUES (:1, :2, TO_TIMESTAMP(:3, 'YYYY-MM-DD HH24:MI:SS'), TO_DATE(:4, 'YYYY-MM-DD'), :5, :6)");
+            stmt->setString(1, booker[i]); // Booker ID
+            stmt->setString(2, bookee[i]); // Bookee ID
+            stmt->setString(3, date[i] + " " + timeSlot[i] + ":00"); // TimeSlot (combining date and time)
+            stmt->setString(4, date[i]); // AppointmentDate
+            stmt->setString(5, status[i]); // Status
+            stmt->setString(6, length[i]); // Length
+            stmt->executeUpdate();
+            delete stmt;
         }
 
-        // Clean up
-        stmt->closeResultSet(rs);
-        conn->terminateStatement(stmt);
+        // Commit the changes
+        conn->commit();
 
+        std::cout << "Dummy appointments inserted successfully." << std::endl;
     } catch (SQLException& ex) {
-        std::cout << "Database error: " << ex.what() << std::endl;
+        std::cerr << "Database error: " << ex.what() << std::endl;
     }
-} */
-
-// =============================================================================================================================================================================================
+}

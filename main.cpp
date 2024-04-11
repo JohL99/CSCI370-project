@@ -5,9 +5,6 @@
 #include <iostream>
 
 
-// connection string
-#define CONNECTSTRING "database.csci.viu.ca"
-
 
 int main () {
 
@@ -22,9 +19,6 @@ int main () {
     oracle::occi::Environment* env = NULL;
     oracle::occi::Connection* conn = NULL;
 
-    std::string userName;
-    std::string password;
-
     // get database credentials
     std::string dbUserName = getUserName(1);
     std::string dbPassword = readPassword(1);
@@ -33,22 +27,19 @@ int main () {
     ScreenStack screenStack;
     screenStack.push(screenIDs.stackBottom);
 
-    /* user.isLoggedIn = false;
-    user.IdNum = "123456789";
-    user.name = "John Doe"; */
-
-    
-
-    // stub testing
-    /* user.isLoggedIn = true;
-    user.IdNum = userName; */
-
 
     dbConnect(dbUserName, dbPassword, CONNECTSTRING, env, conn);
 
     if (env == NULL || conn == NULL) {
+        // error connecting to database
         return 1;
     }
+
+    createDatabaseTables(conn);
+    //insertDataFromCSV(conn);
+    insertDummyUsers(conn);
+    insertDummyAppointments(conn);
+
 
     // show login screen
     showLoginScreen(user, conn);

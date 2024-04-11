@@ -10,14 +10,12 @@
 #define RESPONSE_ERROR "Error: Could not complete the request %s."
 #define CONNECTSTRING "database.csci.viu.ca"
 
+#define APPOINTMENT_CSV "data/Appointment.csv"
+#define USERS_CSV "data/Users.csv"
+
 using namespace std;
 using namespace oracle::occi;
 
-class response {
-    public:
-        std::string response;
-        bool success;
-};
 
 class appointment {
     public:
@@ -35,7 +33,7 @@ void dbDisconnect(Environment*& env, Connection*& conn);
 
 bool dbQueryLogin(string username, string password, Connection*& conn, user &usr);
 
-response sendResponse();
+string getUserName(Connection*& conn, const string& userID);
 
 bool doesProfessorExist(Connection*& conn, const string& name);
 
@@ -52,6 +50,16 @@ void confirmAppointment(Connection*& conn, const string aptID, const user& usr);
 void cancelAppointment(Connection*& conn, const user& usr, const string aptID);
 
 string getAppointments(Connection*& conn, const user& usr);
+
+void insertDataFromCSV(Connection*& conn);
+
+void createDatabaseTables(Connection*& conn);
+
+void dropDatabaseObjects(Connection*& conn);
+
+void insertDummyUsers(Connection*& conn);
+
+void insertDummyAppointments(Connection*& conn);
 
 
 #endif
