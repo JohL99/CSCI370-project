@@ -21,8 +21,38 @@ oracle
 
 ## Usage
 
+1. Initially the program will prompt for an oracle username and password
 
+2. The program will then prompt for a user to login using their application user and password
+    - These are in the form of VIU student numbers and a password.
+    - The 2 default users are:
+        - STUDENT: 123456789, password123
+        - PROFESSOR: 987654321, password456
 
+3. The user will then be prompted with the welcome screen and a list of options to choose from.
+    - welcome <user's name> what would you like to do?
+      view - view appointments
+      book - book an appointment
+      back - go back
+      help - show help
+      quit - exit the application
+
+    - The user can then choose from the list of options by typing the option they want to choose.
+
+4. If the user chooses to view appointments, they will be prompted with a list of appointments that they have booked.
+    - The user can then choose to confirm the appointment by typing confirm <appointment ID>.
+    - The user can then choose to cancel the appointment by typing cancel <appointment ID>.
+    - The user can then choose to go back to the main menu by typing back.
+    - The user can then choose to quit the application by typing quit.
+
+5. If the user chooses to book an appointment, they will be prompted with a list of available appointments.
+    - The user can then choose to book an appointment by typing book
+        -  The user will then be prompted for the name of the person they want to book the appointment with.
+        -  The user will then be prompted for the date and time of the appointment.
+            - If these are all valid the appointment will be booked, and the user notified.
+            - During the booking process the user can type CANCEL to cancel the booking process.
+    - The user can then choose to go back to the main menu by typing back.
+    - The user can then choose to quit the application by typing quit.
 
 ## Notes
 

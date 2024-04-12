@@ -10,8 +10,8 @@
 #define RESPONSE_ERROR "Error: Could not complete the request %s."
 #define CONNECTSTRING "database.csci.viu.ca"
 
-#define APPOINTMENT_CSV "data/Appointment.csv"
-#define USERS_CSV "data/Users.csv"
+#define APPOINTMENT_CSV "data/appointments.csv"
+#define USERS_CSV "data/usersFile.csv"
 
 using namespace std;
 using namespace oracle::occi;

@@ -15,11 +15,17 @@
 
 
 void showWelcomeScreen(user &user);
+
 void showLoginScreen(user &user, oracle::occi::Connection*& conn);
+
 void showAppointmentsScreen(user &user, oracle::occi::Connection*& conn);
+
 void showBookingScreen(user &user, oracle::occi::Connection*& conn);
+
 void showHelpScreen();
+
 void confirmAppointmentScreen(const std::string aptID, user& user, oracle::occi::Connection*& conn);
+
 void cancelAppointmentScreen(user &user, oracle::occi::Connection*& conn, const std::string aptID);
 
 void getUserCommand(std::string& userCommand);
