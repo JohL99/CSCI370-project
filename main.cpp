@@ -44,7 +44,7 @@ int main () {
     // show login screen
     showLoginScreen(user, conn);
 
-    showWelcomeScreen(user, conn);
+    showWelcomeScreen(user);
     screenStack.push(screenIDs.welcomeID);
 
     // get user command and interpret it

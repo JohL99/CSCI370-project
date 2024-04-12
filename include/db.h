@@ -25,6 +25,7 @@ class appointment {
         std::string Time;
         std::string Date;
         std::string Status;
+        std::string Length;
 };
 
 void dbConnect(string userName, string password, string connectString, Environment*& env, Connection*& conn);
@@ -37,13 +38,13 @@ string getUserName(Connection*& conn, const string& userID);
 
 bool doesProfessorExist(Connection*& conn, const string& name);
 
-bool isValidTime(const string& timeSlot);
+bool isValidTime(Connection*& conn, const string& timeSlot, const string& bookee);
 
 bool isValidDate(const std::string& dateStr);
 
-void createAppointment(Connection*& conn, const appointment& apt);
+bool isValidLength(const std::string& str);
 
-void scheduleAppointment(Connection*& conn, const user& usr);
+void createAppointment(Connection*& conn, const appointment& apt);
 
 void confirmAppointment(Connection*& conn, const string aptID, const user& usr);
 

@@ -72,7 +72,7 @@ void interpretAndHandleUserCommand(string command, bool& quitFlag, user &user, S
         inputs[viewAppointments] = 3;
         inputs[bookAppointment] = 4;
         inputs[confirm] = 5;
-        inputs[cancelAppointment] = 6;
+        inputs[cancelAppointmentCmd] = 6;
 
         
 
@@ -196,7 +196,12 @@ string getUserName(int dbFlag) {
 }
 
 
-void showWelcomeScreen(user &user, Connection*& conn) {
+/**
+ * Displays the welcome screen for the user.
+ * 
+ * @param user The user object containing user information.
+ */
+void showWelcomeScreen(user &user) {
 
     if (!user.isLoggedIn) {
         cout << endl << "Invalid username or password." << endl;
@@ -214,6 +219,14 @@ void showWelcomeScreen(user &user, Connection*& conn) {
 }
 
 
+/**
+ * Displays the login screen and prompts the user for their username and password.
+ * If the user enters "quit" for either the username or password, the function will exit.
+ * Otherwise, it will attempt to log in the user by calling dbQueryLogin.
+ * 
+ * @param user A reference to the user object that will be updated with the logged-in user's information.
+ * @param conn A pointer to the Connection object used for database queries.
+ */
 void showLoginScreen(user &user, Connection*& conn) {
     string username = "";
     string password = "";
@@ -236,20 +249,24 @@ void showLoginScreen(user &user, Connection*& conn) {
 }
 
 
+/**
+ * Displays the appointments screen for a user.
+ * 
+ * @param user The user for whom the appointments screen is being displayed.
+ * @param conn A pointer to the Connection object used for database operations.
+ */
 void showAppointmentsScreen(user &user, Connection*& conn) {
 
     string response = "";
 
     response = getAppointments(conn, user);
-    // stub testing
-    //response = "test data";
 
     cout << menuDelimiter << endl << endl;
 
-    cout << "Current appointments:" << endl;
+    cout << endl << "Current appointments:" << endl;
 
     if (response == "") {
-        cout << "no appointments found." << endl;
+        cout << endl << "no appointments found." << endl;
     } else if (response == "ERR"){
         char err[100] = "";
         sprintf(err, RESPONSE_ERROR, "view appointments");
@@ -266,31 +283,45 @@ void showAppointmentsScreen(user &user, Connection*& conn) {
 
 }
 
+
+/**
+ * Confirms an appointment for a user.
+ * 
+ * @param aptID The ID of the appointment to confirm.
+ * @param user The user object.
+ * @param conn The database connection.
+ */
 void confirmAppointmentScreen(const string aptID, user& user, Connection*& conn) {
 
     cout << "Confirming appointment " << aptID << "..." << endl;
-
     // send confirmation to db
-    // if success
-    //confirmAppointment(conn, aptID, user);
+    confirmAppointment(conn, aptID, user);
 
 }
 
+
+/**
+ * @brief Displays the cancel appointment screen and cancels the specified appointment.
+ * 
+ * @param user The user object representing the current user.
+ * @param conn The database connection object.
+ * @param aptID The ID of the appointment to be cancelled.
+ */
 void cancelAppointmentScreen(user &user, Connection*& conn, const string aptID) {
 
     cout << "Cancelling appointment " << aptID << "..." << endl;
-
     // send cancellation to db
-    //cancelAppointment(conn, user, aptID);
-    // if success
-
-    cout << "Appointment cancelled successfully." << endl;
-
-    cout << "Appointment ID: " << aptID << endl << endl;
-
+    cancelAppointment(conn, user, aptID);
+    
 }
 
 
+/**
+ * Displays the booking screen for the user to book an appointment.
+ * 
+ * @param user A reference to the user object.
+ * @param conn A pointer to the Connection object.
+ */
 void showBookingScreen(user &user, Connection*& conn) {
 
     cout << menuDelimiter << endl << endl;
@@ -300,6 +331,7 @@ void showBookingScreen(user &user, Connection*& conn) {
     string name;
     string time;
     string date;
+    string length;
 
     apt.UserID = user.IdNum;
 
@@ -320,12 +352,12 @@ void showBookingScreen(user &user, Connection*& conn) {
     cout << "Enter the date of the appointment (YYYY-MM-DD) >>";
     getline(cin, date);
 
-    while (date != "CANCEL" && !isValidTime(date)) {
+    while (date != "CANCEL" && !isValidDate(date)) {
         cout << "Invalid date. Please enter a valid date in the form (YYYY-MM-DD) and today or later or type 'CANCEL' to cancel>> ";
         getline(cin, date);
     }
 
-    if (apt.Date == "CANCEL") {
+    if (date == "CANCEL") {
         return;
     } else {
         apt.Date = date;
@@ -334,7 +366,8 @@ void showBookingScreen(user &user, Connection*& conn) {
     cout << "Enter the time of the appointment (HH:MM) or CANCEL to cancel>> ";
     getline(cin, time);
 
-    while (time != "CANCEL" && !isValidTime(time)) {
+    while (time != "CANCEL" && !isValidTime(conn, time, apt.F_UserName)) {
+        cout << "Invalid time. Please enter a valid time (HH:MM) or 'CANCEL' to cancel>> ";
         getline(cin, time);
     }
 
@@ -344,20 +377,37 @@ void showBookingScreen(user &user, Connection*& conn) {
         apt.Time = time;
     }
 
+    cout << "Enter the length of the appointment (15, 30, 45, 60 mins) or CANCEL to cancel>> ";
+    getline(cin, length);
+
+    while (length != "CANCEL" && !isValidLength(length)) {
+    cout << "Invalid length. Please enter a valid length (15, 30, 45, 60 mins) or 'CANCEL' to cancel>> ";
+    getline(cin, length);
+}
+
+
+    if (length == "CANCEL") {
+        return;
+    } else {
+        apt.Length = length;
+    }
+
     apt.Status = "pending";
 
     cout << "Creating booking..." << endl;
 
     createAppointment(conn, apt);
 
-    cout << "Booking created successfully, status pending awaiting confirmation." << endl;
-
     cout << "Booker:  " << user.name << "\t" << " Bookee: " << apt.F_UserName << "\t" << " Date: " 
-         << apt.Date << "\t" << " Time: " << apt.Time << "\t" << " Status: " << apt.Status << endl << endl;
+         << apt.Date << "\t" << " Time: " << apt.Time << "\t" << " Length: " << apt.Length << "\t" << " Status: " << apt.Status << endl << endl;
 
     cout << menuDelimiter << endl << endl;
 }
 
+
+/**
+ * Displays the help screen with a list of available commands.
+ */
 void showHelpScreen() { 
 
     cout << menuDelimiter << endl << endl;
@@ -371,6 +421,15 @@ void showHelpScreen() {
 
 }
 
+
+/**
+ * Handles the back command by popping the top screen from the screen stack and showing the appropriate screen.
+ * 
+ * @param user The user object.
+ * @param screenstack The screen stack object.
+ * @param screenIDs The screen IDs object.
+ * @param conn The connection object.
+ */
 void handleBackCommand(user &user, ScreenStack &screenstack, screenIDs screenIDs, Connection*& conn) {
 
     cout << menuDelimiter << endl << endl;
@@ -381,7 +440,7 @@ void handleBackCommand(user &user, ScreenStack &screenstack, screenIDs screenIDs
     switch (topScreen) {
         case 1:
             screenstack.push(screenIDs.welcomeID);
-            showWelcomeScreen(user, conn);
+            showWelcomeScreen(user);
             break;
         
         case 2:
@@ -408,7 +467,7 @@ void handleBackCommand(user &user, ScreenStack &screenstack, screenIDs screenIDs
         
         default:
             screenstack.push(screenIDs.welcomeID);
-            showWelcomeScreen(user, conn);
+            showWelcomeScreen(user);
             break;
     }
 

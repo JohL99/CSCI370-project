@@ -1,5 +1,12 @@
+/**
+ * @file screenStack.cpp
+ * @brief Implementation of the ScreenStack class used for back command functionality.
+ */
 #include "screenStack.h"
 #include <cstddef>
+
+
+
 
 // Constructor
 ScreenStack::ScreenStack() {}

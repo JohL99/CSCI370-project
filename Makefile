@@ -4,7 +4,7 @@
 CXX = g++-4.9
 
 # Compiler flags
-CXXFLAGS = -g -I/usr/local/lib/Oracle/instantclient_11_2/sdk/include -I./include
+CXXFLAGS = -g -Wall -Wextra -I/usr/local/lib/Oracle/instantclient_11_2/sdk/include -I./include
 
 # Linker flags
 LFLAGS = -L/usr/local/lib/Oracle/instantclient_11_2 -locci -lociei

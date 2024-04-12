@@ -14,7 +14,7 @@
 
 
 
-void showWelcomeScreen(user &user, oracle::occi::Connection*& conn);
+void showWelcomeScreen(user &user);
 void showLoginScreen(user &user, oracle::occi::Connection*& conn);
 void showAppointmentsScreen(user &user, oracle::occi::Connection*& conn);
 void showBookingScreen(user &user, oracle::occi::Connection*& conn);

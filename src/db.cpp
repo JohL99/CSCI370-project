@@ -10,6 +10,10 @@
 #include <fstream>
 #include <cstring>
 #include <vector>
+#include <cstdlib>
+#include <cstdio>
+#include <algorithm>
+
 
 using namespace std;
 using namespace oracle::occi;
@@ -59,6 +63,16 @@ void dbDisconnect(Environment*& env, Connection*& conn) {
 }
 
 
+/**
+ * Executes a database query to check if the provided username and password match a user in the database.
+ * If a match is found, the user's information is retrieved and stored in the 'usr' object.
+ * 
+ * @param username The username to check.
+ * @param password The password to check.
+ * @param conn A pointer to the database connection.
+ * @param usr A reference to the user object where the retrieved user information will be stored.
+ * @return True if the username and password match a user in the database, false otherwise.
+ */
 bool dbQueryLogin(string username, string password, Connection*& conn, user &usr) {
 
     try {
@@ -90,6 +104,19 @@ bool dbQueryLogin(string username, string password, Connection*& conn, user &usr
 }
 
 
+/**
+ * @brief Retrieves the full name of a user based on their user ID.
+ * 
+ * This function executes a SQL query to retrieve the first name and last name of a user
+ * from the Users370 table in the database. It concatenates the first name and last name
+ * to form the full name of the user and returns it as a string.
+ * 
+ * @param conn A pointer to the database connection object.
+ * @param userID The user ID of the user whose name is to be retrieved.
+ * @return The full name of the user as a string. If an error occurs during the database
+ *         operation, the function returns "Unknown".
+ * @throws SQLException If an error occurs while executing the SQL query.
+ */
 string getUserName(Connection*& conn, const string& userID) {
     try {
         Statement* stmt = conn->createStatement();
@@ -115,8 +142,15 @@ string getUserName(Connection*& conn, const string& userID) {
 }
 
 
+/**
+ * Checks if a professor with the given name exists in the database.
+ * 
+ * @param conn A pointer to the database connection.
+ * @param name The name of the professor to check.
+ * @return True if the professor exists, false otherwise.
+ */
 bool doesProfessorExist(Connection*& conn, const string& name) {
-/*     try {
+    try {
         // Splitting the name into first and last names if it contains a space
         size_t spacePos = name.find(' ');
         string firstName;
@@ -132,7 +166,7 @@ bool doesProfessorExist(Connection*& conn, const string& name) {
         }
 
         Statement* stmtExist = conn->createStatement();
-        string sqlQueryExist = "SELECT COUNT(*) FROM Users WHERE FirstName = :1 OR LastName = :2";
+        string sqlQueryExist = "SELECT COUNT(*) FROM Users370 WHERE FirstName = :1 OR LastName = :2";
         stmtExist->setSQL(sqlQueryExist);
         stmtExist->setString(1, firstName);
         stmtExist->setString(2, lastName);
@@ -150,44 +184,116 @@ bool doesProfessorExist(Connection*& conn, const string& name) {
     } catch (SQLException& ex) {
         cerr << "Database error: " << ex.what() << endl;
         return false; // Return false on error
-    } */
+    }
 }
 
 
 
-
-
-bool isValidTime(const string& timeSlot) {
-/*     // Check if the time slot has the correct format (HH:MM)
+/**
+ * Checks if a given time slot is valid.
+ * 
+ * @param timeSlot The time slot to be checked in the format HH:MM.
+ * @return True if the time slot is valid, false otherwise.
+ */
+bool isValidTime(Connection*& conn, const string& timeSlot, const string& bookeeName) {
+    // Check if the time slot has the correct format (HH:MM)
     if (timeSlot.size() != 5 || timeSlot[2] != ':') {
-        cout << "please enter a time in the format HH:MM\n";
+        cout << "Please enter a time in the format HH:MM\n";
         return false;
     }
 
     // Extract hours and minutes from the time slot string
-    int hours = stoi(timeSlot.substr(0, 2));
-    int minutes = stoi(timeSlot.substr(3, 2));
+    int hours = atoi(timeSlot.substr(0, 2).c_str());
+    int minutes = atoi(timeSlot.substr(3, 2).c_str());
 
     // Check if hours are between 09 and 17
     if (hours < 9 || hours > 17) {
-        cout << "please enter a time between 09:00 and 17:00\n"
+        cout << "Please enter a time between 09:00 and 17:00\n";
         return false;
     }
 
     // Check if minutes are one of "00", "30", "45"
     if (minutes != 0 && minutes != 30 && minutes != 45) {
-        cout << "please enter a time with minutes as 00, 15, 30, or 45\n"
+        cout << "Please enter a time with minutes as 00, 30, or 45\n";
         return false;
     }
 
+    try {
+        // Splitting the name into first and last names if it contains a space
+        size_t spacePos = bookeeName.find(' ');
+        string firstName;
+        string lastName;
+
+        if (spacePos != string::npos) {
+            firstName = bookeeName.substr(0, spacePos);
+            lastName = bookeeName.substr(spacePos + 1);
+        } else {
+            // If no space is found, assume the whole name is either the first or last name
+            firstName = bookeeName;
+            lastName = bookeeName;
+        }
+
+        // Query Users370 table to get the ID based on first or last name
+        Statement* stmtID = conn->createStatement();
+        string sqlQueryID = "SELECT UserID FROM Users370 WHERE FirstName = :1 OR LastName = :2";
+        stmtID->setSQL(sqlQueryID);
+        stmtID->setString(1, firstName);
+        stmtID->setString(2, lastName);
+        ResultSet* rsID = stmtID->executeQuery();
+
+        string bookeeID;
+        if (rsID->next()) {
+            bookeeID = rsID->getString(1);
+        } else {
+            cout << "User with name '" << bookeeName << "' not found.\n";
+            delete rsID;
+            delete stmtID;
+            return false;
+        }
+        delete rsID;
+        delete stmtID;
+
+        // Check for existing appointments
+        Statement* stmtAppt = conn->createStatement();
+        string sqlQueryAppt = "SELECT COUNT(*) FROM Appointment370 WHERE bookeeID = :1 AND TimeSlot = TO_TIMESTAMP(:2, 'HH24:MI')";
+        stmtAppt->setSQL(sqlQueryAppt);
+        stmtAppt->setString(1, bookeeID);
+        stmtAppt->setString(2, timeSlot);
+        ResultSet* rsAppt = stmtAppt->executeQuery();
+
+        int countAppt = 0;
+        if (rsAppt->next()) {
+            countAppt = rsAppt->getInt(1);
+        }
+
+        delete rsAppt;
+        delete stmtAppt;
+
+        if (countAppt > 0) {
+            cout << "Appointment already exists for the specified user at this time.\n";
+            return false;
+        }
+    } catch (SQLException& ex) {
+        cerr << "Database error: " << ex.what() << endl;
+        return false; // Return false on error
+    }
+
     // Time slot is valid
-    return true; */
+    return true;
 }
 
 
+
+
+/**
+ * Checks if a given date string is valid.
+ * 
+ * @param dateStr The date string to be validated in the format "YYYY-MM-DD".
+ * @return True if the date is valid, false otherwise.
+ */
 bool isValidDate(const std::string& dateStr) {
-/*     // Get current date
-    std::time_t currentTime = std::time(nullptr);
+    // Get current date
+    std::time_t currentTime = std::time(NULL);
     std::tm* localTime = std::localtime(&currentTime);
     int currentYear = localTime->tm_year + 1900;
     int currentMonth = localTime->tm_mon + 1;
@@ -215,71 +321,110 @@ bool isValidDate(const std::string& dateStr) {
 
     // Check if the day is valid for the given month
     bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-    int maxDaysInMonth = (month == 2 && isLeapYear) ? 29 : daysInMonth[month - 1];
+    int maxDaysInMonth = (month == 2 && isLeapYear) ? 29 : ((month == 2) ? 28 : ((month == 4 || month == 6 || month == 9 || month == 11) ? 30 : 31));
     if (day > maxDaysInMonth) {
         std::cerr << "Invalid day for the given month." << std::endl;
         return false;
     }
 
     // Date is valid
-    return true; */
+    return true;
 }
+
+
+/**
+ * Checks if a given string has a valid length.
+ * used to check for appointment length
+ * 
+ * @param str The string to be checked.
+ * @return True if the string has a valid length, false otherwise.
+ */
+bool isValidLength(const std::string& str) {
+    std::string validValues[] = {"15", "30", "45", "60"};
+    size_t size = sizeof(validValues) / sizeof(validValues[0]);
+    return std::find(validValues, validValues + size, str) != validValues + size;
+}
+
 
 
 
 // Function to create a new appointment
+/**
+ * Creates an appointment in the database.
+ *
+ * @param conn A pointer to the database connection.
+ * @param apt The appointment object containing the appointment details.
+ */
 void createAppointment(Connection*& conn, const appointment& apt) {
-/*     try {
+    try {
+        // Splitting the name into first and last names if it contains a space
+        size_t spacePos = apt.F_UserName.find(' ');
+        string firstName;
+        string lastName;
+
+        if (spacePos != string::npos) {
+            firstName = apt.F_UserName.substr(0, spacePos);
+            lastName = apt.F_UserName.substr(spacePos + 1);
+        } else {
+            // If no space is found, assume the whole name is either the first or last name
+            firstName = apt.F_UserName;
+            lastName = apt.F_UserName;
+        }
+
+        // Check if the professor exists based on first name
+        Statement* stmtExist = conn->createStatement();
+        string sqlQueryExist = "SELECT userID FROM Users370 WHERE FirstName = :1 OR LastName = :2";
+        stmtExist->setSQL(sqlQueryExist);
+        stmtExist->setString(1, firstName);
+        stmtExist->setString(2, lastName);
+        ResultSet* rsExist = stmtExist->executeQuery();
+
+        string bookeeID;
+        if (rsExist->next()) {
+            bookeeID = rsExist->getString(1);
+        } else {
+            cout << "Bookee not found." << endl;
+            delete rsExist;
+            delete stmtExist;
+            return;
+        }
+
+        delete rsExist;
+        delete stmtExist;
+
+        // Insert appointment into Appointment370 table
         Statement* stmt = conn->createStatement();
-        stmt->setSQL("INSERT INTO Appointment (StudentID, ProfessorID, TimeSlot, AppointmentDate, Status) VALUES (:1, :2, TO_TIMESTAMP(:3, 'HH24:MI'), TO_DATE(:4, 'YYYY-MM-DD'), 'Pending')");
-        stmt->setString(1, apt.UserID);
-        stmt->setString(2, apt.F_UserName);
+        stmt->setSQL("INSERT INTO Appointment370 (bookerID, bookeeID, TimeSlot, AppointmentDate, Status, Length) VALUES (:1, :2, TO_TIMESTAMP(:3, 'HH24:MI'), TO_DATE(:4, 'YYYY-MM-DD'), :5, :6)");
+        stmt->setString(1, apt.UserID); // Using apt.UserID directly for bookerID
+        stmt->setString(2, bookeeID);
         stmt->setString(3, apt.Time);
         stmt->setString(4, apt.Date);
+        stmt->setString(5, apt.Status);
+        stmt->setString(6, apt.Length);
         stmt->executeUpdate();
         conn->commit();
         delete stmt;
-        cout << "Appointment created successfully!" << endl;
+        cout << "Booking created successfully." << endl;
     } catch (SQLException& ex) {
         cout << "Database error: " << ex.what() << endl;
-    } */
+    }
 }
 
 
-void scheduleAppointment(Connection*& conn, const user& usr) {
-/*     if (getUserType(usr) == STUDENT) {
-        string professorName;
-        string timeSlot;
-        string appointmentDate;
-        
-        // Get professor's name and time slot
-        cout << "Enter professor's name: ";
-        getline(cin, professorName);
-        cout << "Enter time slot (HH:MM): ";
-        getline(cin, timeSlot);
-        cout << "Enter appointment date (YYYY/MM/DD): ";
-        getline(cin, appointmentDate);
-        
-        // Check if the professor exists and is available at the given time slot
-        // You need to implement this function based on your database schema
-        if (isProfessorAvailable(conn, professorName, timeSlot, appointmentDate)) {
-            // Create a new appointment
-            createAppointment(conn, usr.IdNum, professorName, timeSlot, appointmentDate);
-        } else {
-            cout << "The professor is not available at the given time slot." << endl;
-            // You may prompt the user to choose another time slot or take other actions
-        }
-    } else if (getUserType(usr) == PROFESSOR) {
-        // Handle scheduling logic for professors
-    } else {
-        cout << "Invalid user type!" << endl;
-    } */
-}
-
+/**
+ * @brief Confirms an appointment for a given user.
+ * 
+ * This function updates the status of an appointment to 'Confirmed' in the Appointment370 table
+ * in the database for the specified user and appointment ID.
+ * 
+ * @param conn A pointer to the database connection.
+ * @param aptID The ID of the appointment to confirm.
+ * @param usr The user object representing the user confirming the appointment.
+ */
 void confirmAppointment(Connection*& conn, const string aptID, const user& usr) {
-/*     try {
+    try {
         Statement* stmt = conn->createStatement();
-        stmt->setSQL("UPDATE Appointment SET Status = 'Confirmed' WHERE bookerID = :1 AND AppointmentID = :2");
+        stmt->setSQL("UPDATE Appointment370 SET Status = 'Confirmed' WHERE bookeeID = :1 AND AppointmentID = :2");
         stmt->setString(1, usr.IdNum);
         stmt->setString(2, aptID);
         int numRowsUpdated = stmt->executeUpdate();
@@ -293,16 +438,27 @@ void confirmAppointment(Connection*& conn, const string aptID, const user& usr) 
         }
     } catch (SQLException& ex) {
         cout << "Database error: " << ex.what() << endl;
-    } */
+    }
 }
 
 
 
+/**
+ * @brief Cancels an appointment for a given user.
+ * 
+ * This function cancels an appointment in the database for a specified user. It deletes the appointment
+ * from the Appointment370 table where the AppointmentID matches the provided aptID and the bookeeID or
+ * bookerID matches the user's IdNum.
+ * 
+ * @param conn A pointer to the database connection.
+ * @param usr The user for whom the appointment is being cancelled.
+ * @param aptID The ID of the appointment to be cancelled.
+ */
 void cancelAppointment(Connection*& conn, const user& usr, const string aptID) {
-/*     try {
+    try {
         Statement* stmt = conn->createStatement();
-        stmt->setSQL("UPDATE Appointment SET Status = 'Cancelled' WHERE AppointmentID = :1 AND StudentID = :2");
-        stmt->setString(1, appointmentID);
+        stmt->setSQL("DELETE FROM Appointment370 WHERE AppointmentID = :1 AND bookeeID = :2 OR bookerID = :2");
+        stmt->setString(1, aptID);
         stmt->setString(2, usr.IdNum);
         stmt->executeUpdate();
         conn->commit();
@@ -311,9 +467,17 @@ void cancelAppointment(Connection*& conn, const user& usr, const string aptID) {
     } catch (SQLException& ex) {
         cout << "Database error: " << ex.what() << endl;
     }
- */
 }
 
+
+/**
+ * @brief shows all appointments for the logged in user.
+ * 
+ * 
+ * @param conn A pointer to the database connection.
+ * @param usr The user for whom the appointment is being cancelled.
+ * @param aptID The ID of the appointment to be cancelled.
+ */
 string getAppointments(Connection*& conn, const user& usr) {
     try {
         Statement* stmt = conn->createStatement();
@@ -342,11 +506,6 @@ string getAppointments(Connection*& conn, const user& usr) {
                 result += "With: " + bookerName + "\t";
             }
 
-            /* // Get the details of the bookee
-            string bookeeID = rs->getString(3);
-            string bookeeName = getUserName(conn, bookeeID);
-            result += "With: " + bookeeName + "\t"; */
-
             result += "Time: " + rs->getString(4) + "\t";
             result += "Date: " + rs->getString(5) + "\t";
             result += "Status: " + rs->getString(6) + "\t";
@@ -367,6 +526,11 @@ string getAppointments(Connection*& conn, const user& usr) {
 }
 
 
+/**
+ * Drops database objects including trigger, sequence, and tables.
+ * 
+ * @param conn A pointer to the Connection object representing the database connection.
+ */
 void dropDatabaseObjects(Connection*& conn) {
     try {
         Statement* stmt = conn->createStatement();
@@ -411,6 +575,11 @@ void dropDatabaseObjects(Connection*& conn) {
 }
 
 
+/**
+ * Creates the necessary database tables, sequence and trigger for the application.
+ * 
+ * @param conn A pointer to the database connection object.
+ */
 void createDatabaseTables(Connection*& conn) {
     try {
         Statement* stmt = conn->createStatement();
@@ -545,6 +714,12 @@ void insertDataFromCSV(Connection*& conn) {
     cout << "Data inserted successfully from CSV files." << endl;
 }
 
+
+/**
+ * Inserts dummy users into the Users370 table.
+ * 
+ * @param conn A pointer to the Connection object representing the database connection.
+ */
 void insertDummyUsers(Connection*& conn) {
     try {
         Statement* stmt = conn->createStatement();
@@ -568,6 +743,11 @@ void insertDummyUsers(Connection*& conn) {
 }
 
 
+/**
+ * Inserts dummy appointments into the database.
+ * 
+ * @param conn A pointer to the database connection.
+ */
 void insertDummyAppointments(Connection*& conn) {
     try {
         // Dummy data for appointments
